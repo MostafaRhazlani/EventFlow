@@ -1,0 +1,42 @@
+services:
+  # database
+  mongodb:
+    image: mongo:latest
+    container_name: eventflow-db
+    ports:
+      - "27017:27017"
+    networks:
+      - eventflow-network
+    volumes:
+      - mongo-data:/data/db
+
+  # backend
+  backend:
+    build: ./backend
+    container_name: eventflow-back
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/eventflow
+    depends_on:
+      - mongodb
+    networks:
+      - eventflow-network
+
+  # frontend
+  frontend:
+    build: ./frontend
+    container_name: eventflow-front
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://localhost:5000
+    depends_on:
+      - backend
+
+networks:
+  eventflow-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
