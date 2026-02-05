@@ -17,7 +17,7 @@ export class User extends Document {
   @Prop({ required: true })
   password: string;
 
-  @Prop({ default: Roles.PARTICIPANT })
+  @Prop({ type: String, enum: Roles, default: Roles.PARTICIPANT })
   role: Roles;
 
   comparePassword: (password: string) => Promise<boolean>;
