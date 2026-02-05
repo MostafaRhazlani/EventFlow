@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { Payload } from './dto/payload.dto';
 
 @Injectable()
 export class AuthService {
@@ -26,7 +27,10 @@ export class AuthService {
     return user;
   }
 
-  async login(loginDto: LoginDto): Promise<{ access_token: string }> {
+  async login(loginDto: LoginDto): Promise<{
+    access_token: string;
+    user: Payload;
+  }> {
     const user = await this.userService.findByEmail(loginDto.email);
 
     if (!user || !(await user.comparePassword(loginDto.password))) {
@@ -40,6 +44,8 @@ export class AuthService {
       role: user.role,
     };
 
-    return { access_token: await this.jwtService.signAsync(payload) };
+    const access_token = await this.jwtService.signAsync(payload);
+
+    return { access_token, user };
   }
 }

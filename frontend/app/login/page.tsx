@@ -1,22 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { loginAction } from "@/lib/actions/login";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ email, password, rememberMe });
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await loginAction({ email, password });
+      
+      if (response.role === 'ADMIN') {
+        router.push("/dashboard");
+      } else {
+        router.push("/home");
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,6 +50,9 @@ export default function LoginPage() {
             className="object-cover rounded-4xl"
             priority
           />
+
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 rounded-4xl bg-gradient-to-t from-purple-900/80 via-purple-800/40 to-transparent" />
 
           {/* Logo Overlay */}
           <div className="hidden absolute top-6 left-6 lg:flex items-center gap-2 z-10">
@@ -56,8 +77,8 @@ export default function LoginPage() {
 
         {/* Right Column - Form Section */}
         <div className="w-full lg:w-2/5 p-6 sm:p-10 lg:p-20 flex flex-col justify-center">
-          {/* Header */}
-          <div className="flex justify-center mb-6 lg:mb-8">
+          {/* Mobile Header (Logo) */}
+           <div className="flex justify-center mb-6 lg:hidden">
             <div className="flex items-center gap-2">
               <Image
                 src="/images/eventflow.png"
@@ -71,31 +92,37 @@ export default function LoginPage() {
           {/* Greeting */}
           <div className="mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-              Hi Events Lovers 👋
+              Welcome Back
             </h1>
             <p className="text-gray-500">
-              Welcome back! Please login to your account.
+              Please enter your details to sign in.
             </p>
           </div>
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+             {error && (
+              <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg">
+                {error}
+              </div>
+            )}
+            
             {/* Email Field */}
             <div>
               <label
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Email
+                Email Address
               </label>
-              <input
+              <Input
                 type="email"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="input-field"
                 required
+                disabled={loading}
               />
             </div>
 
@@ -108,20 +135,22 @@ export default function LoginPage() {
                 Password
               </label>
               <div className="relative">
-                <input
+                <Input
                   type={showPassword ? "text" : "password"}
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="input-field pr-12"
+                  className="pr-12"
                   required
+                  disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1"
                   aria-label={showPassword ? "Hide password" : "Show password"}
+                  disabled={loading}
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -132,41 +161,42 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 transition-colors cursor-pointer"
-                />
-                <span className="text-sm text-gray-600">Remember Me</span>
-              </label>
-              <Link
-                href="/forgot-password"
-                className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors"
-              >
-                Forgot Password?
-              </Link>
-            </div>
+             {/* Remember Me & Forgot Password - Optional addition based on previous layout */}
+             <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                    Remember me
+                  </label>
+                </div>
+
+                <div className="text-sm">
+                  <a href="#" className="font-medium text-purple-600 hover:text-purple-500">
+                    Forgot password?
+                  </a>
+                </div>
+              </div>
+
 
             {/* Login Button */}
-            <button type="submit" className="btn-primary">
-              Login
-            </button>
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? "Signing in..." : "Sign in"}
+            </Button>
+            
+            {/* Register Link */}
+            <div className="mt-6 text-center text-sm text-gray-600">
+                Do not have an account?{" "}
+                <Link href="/register" className="font-semibold text-purple-600 hover:text-purple-500">
+                  : Register
+                </Link>
+            </div>
+            
           </form>
-
-          {/* Sign Up Link */}
-          <p className="mt-8 text-center text-gray-600">
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/register"
-              className="text-purple-600 hover:text-purple-700 font-semibold transition-colors"
-            >
-              Sign up
-            </Link>
-          </p>
         </div>
       </div>
     </main>

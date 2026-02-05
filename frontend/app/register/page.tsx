@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Eye,
   EyeOff,
@@ -9,17 +10,31 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { registerAction } from "@/lib/actions/register";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ firstName, lastName, email, password });
+    setLoading(true);
+    setError("");
+
+    try {
+      await registerAction({ firstName, lastName, email, password });
+      router.push("/login");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,8 +51,11 @@ export default function RegisterPage() {
             priority
           />
 
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 rounded-4xl bg-gradient-to-t from-purple-900/80 via-purple-800/40 to-transparent" />
+
           {/* Logo Overlay */}
-          <div className="hidden absolute top-6 left-6 lg:flex items-center gap-2 z-10">
+          <div className="absolute top-6 left-6 flex items-center gap-2 z-10">
             <Image
               src="/images/eventflow.png"
               alt=""
@@ -83,6 +101,11 @@ export default function RegisterPage() {
 
           {/* Register Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
+             {error && (
+              <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg">
+                {error}
+              </div>
+            )}
              {/* First Name & Last Name */}
              <div className="flex gap-4">
                 <div className="w-1/2">
@@ -99,6 +122,7 @@ export default function RegisterPage() {
                         onChange={(e) => setFirstName(e.target.value)}
                         placeholder="First Name"
                         required
+                        disabled={loading}
                     />
                 </div>
                 <div className="w-1/2">
@@ -115,6 +139,7 @@ export default function RegisterPage() {
                         onChange={(e) => setLastName(e.target.value)}
                         placeholder="Last Name"
                         required
+                        disabled={loading}
                     />
                 </div>
              </div>
@@ -134,6 +159,7 @@ export default function RegisterPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 required
+                disabled={loading}
               />
             </div>
 
@@ -154,12 +180,14 @@ export default function RegisterPage() {
                   placeholder="Enter your password"
                   className="pr-12"
                   required
+                  disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1"
                   aria-label={showPassword ? "Hide password" : "Show password"}
+                  disabled={loading}
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -171,8 +199,8 @@ export default function RegisterPage() {
             </div>
 
             {/* Register Button */}
-            <Button type="submit">
-              Register
+            <Button type="submit" disabled={loading}>
+              {loading ? "Registering..." : "Register"}
             </Button>
           </form>
 
