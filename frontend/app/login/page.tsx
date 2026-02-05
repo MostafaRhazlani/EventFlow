@@ -78,7 +78,7 @@ export default function LoginPage() {
         {/* Right Column - Form Section */}
         <div className="w-full lg:w-2/5 p-6 sm:p-10 lg:p-20 flex flex-col justify-center">
           {/* Mobile Header (Logo) */}
-           <div className="flex justify-center mb-6 lg:hidden">
+           <div className="flex justify-center mb-6">
             <div className="flex items-center gap-2">
               <Image
                 src="/images/eventflow.png"

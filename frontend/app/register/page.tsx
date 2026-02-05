@@ -55,7 +55,7 @@ export default function RegisterPage() {
           <div className="absolute inset-0 rounded-4xl bg-gradient-to-t from-purple-900/80 via-purple-800/40 to-transparent" />
 
           {/* Logo Overlay */}
-          <div className="absolute top-6 left-6 flex items-center gap-2 z-10">
+          <div className="hidden absolute top-6 left-6 lg:flex items-center gap-2 z-10">
             <Image
               src="/images/eventflow.png"
               alt=""
