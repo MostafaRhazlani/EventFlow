@@ -1,5 +1,6 @@
 import { Document, Types } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { EventStatus } from '../enums/event-status.enum';
 
 @Schema({ timestamps: true })
 export class Event extends Document {
@@ -17,6 +18,9 @@ export class Event extends Document {
 
   @Prop()
   image: string;
+
+  @Prop({ type: String, enum: EventStatus, default: EventStatus.DRAFT })
+  status: EventStatus;
 
   @Prop({ required: true, min: 1 })
   maxParticipants: number;

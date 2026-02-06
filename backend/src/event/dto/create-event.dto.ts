@@ -6,8 +6,10 @@ import {
   Min,
   IsOptional,
   IsMongoId,
+  IsEnum,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { EventStatus } from '../enums/event-status.enum';
 
 export class CreateEventDto {
   @IsString()
@@ -29,6 +31,10 @@ export class CreateEventDto {
   @IsString()
   @IsOptional()
   image?: string;
+
+  @IsEnum(EventStatus)
+  @IsOptional()
+  status?: EventStatus;
 
   @Transform(({ value }) => parseInt(value as string, 10))
   @IsNumber()

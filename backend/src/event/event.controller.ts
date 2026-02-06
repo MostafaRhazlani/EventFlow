@@ -14,6 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
+import { UpdateStatusDto } from './dto/update-status.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { RequireRoles } from 'src/auth/decorators/roles.decorator';
@@ -69,5 +70,15 @@ export class EventController {
   @RequireRoles(Roles.ADMIN)
   remove(@Param('id') id: string) {
     return this.eventService.remove(id);
+  }
+
+  @Patch(':id/status')
+  @UseGuards(RolesGuard)
+  @RequireRoles(Roles.ADMIN)
+  updateStatus(
+    @Param('id') id: string,
+    @Body() updateStatusDto: UpdateStatusDto,
+  ) {
+    return this.eventService.updateStatus(id, updateStatusDto);
   }
 }
