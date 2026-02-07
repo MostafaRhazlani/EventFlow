@@ -34,7 +34,7 @@ export class CreateEventDto {
 
   @IsEnum(EventStatus)
   @IsOptional()
-  status?: EventStatus;
+  status?: EventStatus = EventStatus.DRAFT;
 
   @Transform(({ value }) => parseInt(value as string, 10))
   @IsNumber()

@@ -27,9 +27,6 @@ export class Event extends Document {
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   organizer: Types.ObjectId;
-
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
-  participants: Types.ObjectId[];
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);
