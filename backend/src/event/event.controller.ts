@@ -20,23 +20,26 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { RequireRoles } from 'src/auth/decorators/roles.decorator';
 import { Roles } from 'src/user/enums/roles.enum';
 import { multerConfig } from 'src/config/multer.config';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { Payload } from 'src/auth/dto/payload.dto';
 
 @Controller('events')
-@UseGuards(AuthGuard)
 export class EventController {
   constructor(private readonly eventService: EventService) {}
 
-  @Post('create')
-  @UseGuards(RolesGuard)
-  @RequireRoles(Roles.ADMIN)
+  @Post()
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRoles(Roles.ADMIN, Roles.ORGANIZER)
   @UseInterceptors(FileInterceptor('image', multerConfig))
   create(
     @Body() createEventDto: CreateEventDto,
     @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: Payload,
   ) {
     if (file) {
       createEventDto.image = file.path;
     }
+    createEventDto.organizer = user.sub;
     return this.eventService.create(createEventDto);
   }
 
@@ -45,40 +48,49 @@ export class EventController {
     return this.eventService.findAll();
   }
 
+  @Get('my-events')
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRoles(Roles.ORGANIZER)
+  findMyEvents(@CurrentUser() user: Payload) {
+    return this.eventService.findMyEvents(user.sub);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.eventService.findOne(id);
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard)
-  @RequireRoles(Roles.ADMIN)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRoles(Roles.ADMIN, Roles.ORGANIZER)
   @UseInterceptors(FileInterceptor('image', multerConfig))
   update(
     @Param('id') id: string,
     @Body() updateEventDto: UpdateEventDto,
     @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: Payload,
   ) {
     if (file) {
       updateEventDto.image = file.path;
     }
-    return this.eventService.update(id, updateEventDto);
+    return this.eventService.update(id, updateEventDto, user);
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
-  @RequireRoles(Roles.ADMIN)
-  remove(@Param('id') id: string) {
-    return this.eventService.remove(id);
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRoles(Roles.ADMIN, Roles.ORGANIZER)
+  remove(@Param('id') id: string, @CurrentUser() user: Payload) {
+    return this.eventService.remove(id, user);
   }
 
   @Patch(':id/status')
-  @UseGuards(RolesGuard)
-  @RequireRoles(Roles.ADMIN)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRoles(Roles.ADMIN, Roles.ORGANIZER)
   updateStatus(
     @Param('id') id: string,
     @Body() updateStatusDto: UpdateStatusDto,
+    @CurrentUser() user: Payload,
   ) {
-    return this.eventService.updateStatus(id, updateStatusDto);
+    return this.eventService.updateStatus(id, updateStatusDto, user);
   }
 }
