@@ -20,6 +20,9 @@ export class User extends Document {
   @Prop({ type: String, enum: Roles, default: Roles.PARTICIPANT })
   role: Roles;
 
+  @Prop({ type: Boolean, default: false })
+  isApproved: boolean;
+
   comparePassword: (password: string) => Promise<boolean>;
 }
 
