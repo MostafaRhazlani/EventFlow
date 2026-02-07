@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Calendar, MapPin, ArrowLeft } from 'lucide-react';
-import { getMyBookings, getCurrentUser } from '@/lib/services';
+import { Calendar, MapPin, ArrowLeft, Download, Loader2 } from 'lucide-react';
+import { getMyBookings, getCurrentUser, downloadTicketPdf } from '@/lib/services';
 import { Event, BookingStatus } from '@/types/event';
 import { User } from '@/types/user';
 
@@ -20,6 +20,7 @@ export default function MyBookingsPage() {
   const [bookings, setBookings] = useState<Event[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -52,6 +53,18 @@ export default function MyBookingsPage() {
       (p) => p.user?._id === user._id
     );
     return myParticipation?.status || null;
+  };
+
+  const handleDownloadTicket = async (eventId: string) => {
+    setDownloadingId(eventId);
+    try {
+      await downloadTicketPdf(eventId);
+    } catch (error) {
+      console.error('Failed to download ticket:', error);
+      alert('Failed to download ticket. Please try again.');
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   if (loading) {
@@ -138,12 +151,28 @@ export default function MyBookingsPage() {
                       </div>
                     </div>
 
-                    <Link
-                      href={`/events/${event._id}`}
-                      className="mt-4 text-center py-2 text-purple-600 hover:bg-purple-50 rounded-lg font-medium text-sm transition-colors"
-                    >
-                      View Details →
-                    </Link>
+                    <div className="mt-4 flex gap-2">
+                      <Link
+                        href={`/events/${event._id}`}
+                        className="flex-1 text-center py-2 text-purple-600 hover:bg-purple-50 rounded-lg font-medium text-sm transition-colors"
+                      >
+                        View Details
+                      </Link>
+                      {status === 'CONFIRMED' && (
+                        <button
+                          onClick={() => handleDownloadTicket(event._id)}
+                          disabled={downloadingId === event._id}
+                          className="flex items-center justify-center gap-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Download Ticket"
+                        >
+                          {downloadingId === event._id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Download className="w-4 h-4" />
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

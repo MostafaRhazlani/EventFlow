@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { bookEvent, getCurrentUser } from '@/lib/services';
+import { bookEvent, getCurrentUser, downloadTicketPdf } from '@/lib/services';
 import { Event } from '@/types/event';
 import { User } from '@/types/user';
 
@@ -14,6 +15,7 @@ interface BookEventButtonProps {
 export function BookEventButton({ event }: BookEventButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
@@ -56,6 +58,18 @@ export function BookEventButton({ event }: BookEventButtonProps) {
     }
   };
 
+  const handleDownloadTicket = async () => {
+    setDownloading(true);
+    try {
+      await downloadTicketPdf(event._id);
+    } catch (err) {
+      console.error('Failed to download ticket:', err);
+      alert('Failed to download ticket. Please try again.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (checkingAuth) {
       return <Button disabled variant="outline" className="w-full">Loading...</Button>;
   }
@@ -82,9 +96,30 @@ export function BookEventButton({ event }: BookEventButtonProps) {
     }
 
     return (
+      <div className="space-y-3">
         <Button disabled variant="outline" className={`w-full ${statusColor}`}>
             {label}
         </Button>
+        {myBooking?.status === 'CONFIRMED' && (
+          <Button
+            onClick={handleDownloadTicket}
+            disabled={downloading}
+            className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+          >
+            {downloading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Downloading...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                Download Ticket
+              </>
+            )}
+          </Button>
+        )}
+      </div>
     );
   }
 

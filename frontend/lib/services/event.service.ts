@@ -53,3 +53,20 @@ export async function updateBookingStatus(eventId: string, userId: string, statu
   const res = await api.patch(`/events/${eventId}/booking/${userId}`, { status });
   return res.data;
 }
+
+export async function downloadTicketPdf(eventId: string): Promise<void> {
+  const res = await api.get(`/events/${eventId}/ticket`, {
+    responseType: 'blob',
+  });
+
+  // Create a blob URL and trigger download
+  const blob = new Blob([res.data], { type: 'application/pdf' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `ticket-${eventId}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+}
