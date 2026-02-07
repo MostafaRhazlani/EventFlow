@@ -23,6 +23,8 @@ import { multerConfig } from 'src/config/multer.config';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { Payload } from 'src/auth/dto/payload.dto';
 
+import { BookingStatus } from './enums/booking-status.enum';
+
 @Controller('events')
 export class EventController {
   constructor(private readonly eventService: EventService) {}
@@ -53,6 +55,13 @@ export class EventController {
   @RequireRoles(Roles.ORGANIZER)
   findMyEvents(@CurrentUser() user: Payload) {
     return this.eventService.findMyEvents(user.sub);
+  }
+
+  @Get('my-bookings')
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRoles(Roles.PARTICIPANT)
+  findMyBookings(@CurrentUser() user: Payload) {
+    return this.eventService.findMyBookings(user.sub);
   }
 
   @Get(':id')
@@ -92,5 +101,24 @@ export class EventController {
     @CurrentUser() user: Payload,
   ) {
     return this.eventService.updateStatus(id, updateStatusDto, user);
+  }
+
+  @Post(':id/book')
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRoles(Roles.PARTICIPANT)
+  bookEvent(@Param('id') id: string, @CurrentUser() user: Payload) {
+    return this.eventService.bookEvent(id, user.sub);
+  }
+
+  @Patch(':id/booking/:userId')
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRoles(Roles.ORGANIZER)
+  updateBookingStatus(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Body('status') status: BookingStatus,
+    @CurrentUser() user: Payload,
+  ) {
+    return this.eventService.updateBookingStatus(id, userId, status, user.sub);
   }
 }

@@ -11,7 +11,7 @@ export default async function HomePage() {
   
   try {
     const allEvents = await getEventsServer();
-    events = allEvents.filter(e => e.status === 'PUBLISHED').slice(0, 6);
+    events = allEvents.slice(0, 6);
   } catch (error) {
     console.error('Failed to fetch events:', error);
   }
