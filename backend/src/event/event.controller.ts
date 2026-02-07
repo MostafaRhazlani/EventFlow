@@ -9,7 +9,9 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -120,5 +122,24 @@ export class EventController {
     @CurrentUser() user: Payload,
   ) {
     return this.eventService.updateBookingStatus(id, userId, status, user.sub);
+  }
+
+  @Get(':id/ticket')
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRoles(Roles.PARTICIPANT)
+  async getTicketPdf(
+    @Param('id') id: string,
+    @CurrentUser() user: Payload,
+    @Res() res: Response,
+  ) {
+    const pdfBuffer = await this.eventService.getTicketPdf(id, user.sub);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="ticket-${id}.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
+
+    res.end(pdfBuffer);
   }
 }
