@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -13,10 +14,16 @@ import { Payload } from 'src/auth/dto/payload.dto';
 import { Roles } from 'src/user/enums/roles.enum';
 import { BookingStatus } from './enums/booking-status.enum';
 import { EventStatus } from './enums/event-status.enum';
+import { PdfService } from './pdf.service';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class EventService {
-  constructor(@InjectModel(Event.name) private eventModel: Model<Event>) {}
+  constructor(
+    @InjectModel(Event.name) private eventModel: Model<Event>,
+    private pdfService: PdfService,
+    private userService: UserService,
+  ) {}
 
   async create(createEventDto: CreateEventDto) {
     const createdEvent = await this.eventModel.create(createEventDto);
@@ -156,5 +163,41 @@ export class EventService {
 
     participant.status = status;
     return event.save();
+  }
+
+  async getTicketPdf(eventId: string, userId: string): Promise<Buffer> {
+    const event = await this.eventModel
+      .findById(eventId)
+      .populate('organizer', 'first_name last_name email')
+      .exec();
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const participant = event.participants.find(
+      (p) => p.user?.toString() === userId,
+    );
+
+    if (!participant) {
+      throw new NotFoundException('You have not booked this event');
+    }
+
+    if (participant.status !== BookingStatus.CONFIRMED) {
+      throw new ForbiddenException(
+        'Ticket is only available for confirmed bookings',
+      );
+    }
+
+    const user = await this.userService.findOne(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return this.pdfService.generateTicketPdf({
+      event,
+      user,
+      bookingDate: participant.joinedAt,
+    });
   }
 }
