@@ -38,6 +38,7 @@ export class AuthService {
       throw new UnauthorizedException('Email or password is incorrect');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userProps } = user.toObject() as UserDto;
 
     const payload = {
@@ -63,6 +64,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userProps } = user.toObject() as UserDto;
     return {
       ...userProps,
