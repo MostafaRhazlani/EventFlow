@@ -1,5 +1,9 @@
 import { Event, EventStatus } from '@/types/event';
 import Image from 'next/image';
+import Link from 'next/link';
+import { Edit, Trash2 } from 'lucide-react';
+import { deleteEvent } from '@/lib/services';
+import { useState } from 'react';
 
 interface EventsTableProps {
   events: Event[];
@@ -12,6 +16,23 @@ const statusColors: Record<EventStatus, string> = {
 };
 
 export function EventsTable({ events }: EventsTableProps) {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent row click or other events
+    if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) return;
+
+    setDeletingId(id);
+    try {
+      await deleteEvent(id);
+      window.location.reload(); // Refresh to show changes
+    } catch (error) {
+      console.error('Failed to delete event:', error);
+      alert('Failed to delete event');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -42,6 +63,9 @@ export function EventsTable({ events }: EventsTableProps) {
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Status
+            </th>
+            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Actions
             </th>
           </tr>
         </thead>
@@ -91,6 +115,29 @@ export function EventsTable({ events }: EventsTableProps) {
                   >
                     {event.status}
                   </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex items-center justify-end gap-2">
+                    <Link
+                      href={`/dashboard/organizer/events/${event._id}/edit`}
+                      className="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Edit"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Link>
+                    <button
+                      onClick={(e) => handleDelete(event._id, e)}
+                      disabled={deletingId === event._id}
+                      className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                      title="Delete"
+                    >
+                      {deletingId === event._id ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -43,7 +43,7 @@ export class EventService {
   }
 
   async update(id: string, updateEventDto: UpdateEventDto, user: Payload) {
-    const query: any = { _id: id };
+    const query: { _id: string; organizer?: string } = { _id: id };
     if (user.role === Roles.ORGANIZER) {
       query.organizer = user.sub;
     }
@@ -58,7 +58,7 @@ export class EventService {
   }
 
   async remove(id: string, user: Payload) {
-    const query: any = { _id: id };
+    const query: { _id: string; organizer?: string } = { _id: id };
     if (user.role === Roles.ORGANIZER) {
       query.organizer = user.sub;
     }
@@ -70,14 +70,22 @@ export class EventService {
     return deletedEvent;
   }
 
-  async updateStatus(id: string, updateStatusDto: UpdateStatusDto, user: Payload) {
-    const query: any = { _id: id };
+  async updateStatus(
+    id: string,
+    updateStatusDto: UpdateStatusDto,
+    user: Payload,
+  ) {
+    const query: { _id: string; organizer?: string } = { _id: id };
     if (user.role === Roles.ORGANIZER) {
       query.organizer = user.sub;
     }
 
     const updatedEvent = await this.eventModel
-      .findOneAndUpdate(query, { status: updateStatusDto.status }, { new: true })
+      .findOneAndUpdate(
+        query,
+        { status: updateStatusDto.status },
+        { new: true },
+      )
       .exec();
     if (!updatedEvent) {
       throw new NotFoundException(`Event not found or you are not authorized`);

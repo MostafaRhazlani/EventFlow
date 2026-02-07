@@ -18,6 +18,7 @@ export const multerConfig = {
   ) => {
     if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
       return callback(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         new BadRequestException('Only image files are allowed!') as any,
         false,
       );
