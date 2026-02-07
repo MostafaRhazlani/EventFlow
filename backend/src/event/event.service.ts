@@ -4,13 +4,15 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
-import { Event } from './schemas/event.schema';
+import { Event, Participant } from './schemas/event.schema';
 import { Payload } from 'src/auth/dto/payload.dto';
 import { Roles } from 'src/user/enums/roles.enum';
+import { BookingStatus } from './enums/booking-status.enum';
+import { EventStatus } from './enums/event-status.enum';
 
 @Injectable()
 export class EventService {
@@ -23,7 +25,7 @@ export class EventService {
 
   async findAll() {
     return this.eventModel
-      .find()
+      .find({ status: EventStatus.PUBLISHED })
       .populate('organizer', 'first_name last_name email')
       .exec();
   }
@@ -39,6 +41,7 @@ export class EventService {
     const event = await this.eventModel
       .findById(id)
       .populate('organizer', 'first_name last_name email')
+      .populate('participants.user', 'first_name last_name email')
       .exec();
     if (!event) {
       throw new NotFoundException(`Event not found`);
@@ -101,7 +104,11 @@ export class EventService {
     const event = await this.eventModel.findById(id);
     if (!event) throw new NotFoundException('Event not found');
 
-    if (event.participants?.some((a) => a.toString() === userId)) {
+    const isAlreadyBooked = event.participants?.some(
+      (p) => p.user?.toString() === userId,
+    );
+
+    if (isAlreadyBooked) {
       throw new BadRequestException('You have already booked this event');
     }
 
@@ -109,32 +116,37 @@ export class EventService {
       throw new BadRequestException('Event is fully booked');
     }
 
-    const updatedEvent = await this.eventModel.findOneAndUpdate(
-      {
-        _id: id,
-        $expr: {
-          $lt: [
-            { $size: { $ifNull: ['$participants', []] } },
-            '$maxParticipants',
-          ],
-        },
-      },
-      { $addToSet: { participants: userId } },
-      { new: true },
+    event.participants.push({
+      user: new Types.ObjectId(userId),
+      status: BookingStatus.PENDING,
+      joinedAt: new Date(),
+    } as Participant);
+
+    return event.save();
+  }
+
+  async updateBookingStatus(
+    eventId: string,
+    userId: string,
+    status: BookingStatus,
+    organizerId: string,
+  ) {
+    const event = await this.eventModel.findOne({
+      _id: eventId,
+      organizer: organizerId,
+    });
+
+    if (!event) throw new NotFoundException('Event not found or unauthorized');
+
+    const participant = event.participants.find(
+      (p) => p.user?.toString() === userId,
     );
 
-    if (!updatedEvent) {
-      // Double check strictly why it failed if it wasn't caught above
-      const freshEvent = await this.eventModel.findById(id);
-      if (
-        freshEvent &&
-        (freshEvent.participants?.length || 0) >= freshEvent.maxParticipants
-      ) {
-        throw new BadRequestException('Event is fully booked');
-      }
-      throw new BadRequestException('Booking failed');
+    if (!participant) {
+      throw new NotFoundException('Participant not found');
     }
 
-    return updatedEvent;
+    participant.status = status;
+    return event.save();
   }
 }

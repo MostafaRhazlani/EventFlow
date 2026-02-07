@@ -35,7 +35,8 @@ export function BookEventButton({ event }: BookEventButtonProps) {
     checkAuth();
   }, []);
 
-  const isBooked = user && event.participants?.some((id: string) => id === user._id);
+  const myBooking = user ? event.participants?.find((p) => p.user?._id === user._id) : null;
+  const isBooked = !!myBooking;
 
   const handleBook = async () => {
     if (!user) {
@@ -69,9 +70,20 @@ export function BookEventButton({ event }: BookEventButtonProps) {
   }
 
   if (user && isBooked) {
+    let statusColor = 'text-green-700 bg-green-50 border-green-200';
+    let label = "You're Going!";
+    
+    if (myBooking?.status === 'PENDING') {
+        statusColor = 'text-yellow-700 bg-yellow-50 border-yellow-200';
+        label = 'Pending Approval';
+    } else if (myBooking?.status === 'REFUSED') {
+        statusColor = 'text-red-700 bg-red-50 border-red-200';
+        label = 'Booking Refused';
+    }
+
     return (
-        <Button disabled variant="outline" className="w-full bg-green-50 text-green-700 border-green-200">
-            You&apos;re Going!
+        <Button disabled variant="outline" className={`w-full ${statusColor}`}>
+            {label}
         </Button>
     );
   }

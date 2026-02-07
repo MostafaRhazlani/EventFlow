@@ -1,7 +1,7 @@
 import { Event, EventStatus } from '@/types/event';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Eye } from 'lucide-react';
 import { deleteEvent } from '@/lib/services';
 import { useState } from 'react';
 
@@ -118,6 +118,13 @@ export function EventsTable({ events }: EventsTableProps) {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-2">
+                    <Link
+                      href={`/dashboard/organizer/events/${event._id}`}
+                      className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="View Participants"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Link>
                     <Link
                       href={`/dashboard/organizer/events/${event._id}/edit`}
                       className="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-gray-100 rounded-lg transition-colors"

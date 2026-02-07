@@ -1,6 +1,24 @@
 import { Document, Types } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { EventStatus } from '../enums/event-status.enum';
+import { BookingStatus } from '../enums/booking-status.enum';
+
+@Schema({ _id: false }) // Subdocument
+export class Participant {
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  user: Types.ObjectId;
+
+  @Prop({
+    type: String,
+    enum: BookingStatus,
+    default: BookingStatus.PENDING,
+  })
+  status: BookingStatus;
+
+  @Prop({ default: Date.now })
+  joinedAt: Date;
+}
+const ParticipantSchema = SchemaFactory.createForClass(Participant);
 
 @Schema({ timestamps: true })
 export class Event extends Document {
@@ -25,8 +43,8 @@ export class Event extends Document {
   @Prop({ required: true, min: 1 })
   maxParticipants: number;
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
-  participants: Types.ObjectId[];
+  @Prop({ type: [ParticipantSchema], default: [] })
+  participants: Participant[];
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   organizer: Types.ObjectId;

@@ -43,3 +43,8 @@ export async function bookEvent(id: string): Promise<Event> {
   const res = await api.post(`/events/${id}/book`);
   return res.data;
 }
+
+export async function updateBookingStatus(eventId: string, userId: string, status: string): Promise<Event> {
+  const res = await api.patch(`/events/${eventId}/booking/${userId}`, { status });
+  return res.data;
+}
