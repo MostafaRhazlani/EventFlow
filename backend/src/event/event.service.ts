@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -90,6 +94,47 @@ export class EventService {
     if (!updatedEvent) {
       throw new NotFoundException(`Event not found or you are not authorized`);
     }
+    return updatedEvent;
+  }
+
+  async bookEvent(id: string, userId: string) {
+    const event = await this.eventModel.findById(id);
+    if (!event) throw new NotFoundException('Event not found');
+
+    if (event.participants?.some((a) => a.toString() === userId)) {
+      throw new BadRequestException('You have already booked this event');
+    }
+
+    if ((event.participants?.length || 0) >= event.maxParticipants) {
+      throw new BadRequestException('Event is fully booked');
+    }
+
+    const updatedEvent = await this.eventModel.findOneAndUpdate(
+      {
+        _id: id,
+        $expr: {
+          $lt: [
+            { $size: { $ifNull: ['$participants', []] } },
+            '$maxParticipants',
+          ],
+        },
+      },
+      { $addToSet: { participants: userId } },
+      { new: true },
+    );
+
+    if (!updatedEvent) {
+      // Double check strictly why it failed if it wasn't caught above
+      const freshEvent = await this.eventModel.findById(id);
+      if (
+        freshEvent &&
+        (freshEvent.participants?.length || 0) >= freshEvent.maxParticipants
+      ) {
+        throw new BadRequestException('Event is fully booked');
+      }
+      throw new BadRequestException('Booking failed');
+    }
+
     return updatedEvent;
   }
 }

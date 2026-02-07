@@ -9,6 +9,7 @@ export interface Event {
   image?: string;
   status: EventStatus;
   maxParticipants: number;
+  participants: string[];
   organizer: {
     _id: string;
     first_name: string;

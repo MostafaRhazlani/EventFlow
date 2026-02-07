@@ -93,4 +93,11 @@ export class EventController {
   ) {
     return this.eventService.updateStatus(id, updateStatusDto, user);
   }
+
+  @Post(':id/book')
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRoles(Roles.PARTICIPANT)
+  bookEvent(@Param('id') id: string, @CurrentUser() user: Payload) {
+    return this.eventService.bookEvent(id, user.sub);
+  }
 }
