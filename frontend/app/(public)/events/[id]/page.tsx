@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Calendar, MapPin, Users, ArrowLeft, DollarSign } from 'lucide-react';
+import { Calendar, MapPin, Users, ArrowLeft } from 'lucide-react';
 import { getEventServer } from '@/lib/services/event.server';
 import { notFound } from 'next/navigation';
 

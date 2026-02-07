@@ -31,8 +31,8 @@ export default function LoginPage() {
         router.push("/");
         router.refresh();
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "An error occurred");       
+    } catch (err) {
+      setError((err as any).response?.data?.message || (err as any).message || "An error occurred");       
     } finally {
       setLoading(false);
     }

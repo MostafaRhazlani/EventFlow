@@ -43,8 +43,8 @@ export default function BecomeOrganizerPage() {
     try {
       await becomeOrganizer();
       setSuccess(true);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to submit request';
+    } catch (err) {
+      const errorMessage = (err as any).response?.data?.message || 'Failed to submit request';
       setError(errorMessage);
     } finally {
       setSubmitting(false);
@@ -99,7 +99,7 @@ export default function BecomeOrganizerPage() {
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Pending Approval</h1>
           <p className="text-gray-600 mb-6">
-            Your organizer request is being reviewed by our team. We'll notify you once it's approved.
+            Your organizer request is being reviewed by our team. We&apos;ll notify you once it&apos;s approved.
           </p>
           <Link
             href="/"

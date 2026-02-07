@@ -35,7 +35,7 @@ export default function CreateEventPage() {
           router.push('/become-organizer');
           return;
         }
-      } catch (err) {
+      } catch {
         router.push('/login');
       } finally {
         setLoading(false);
@@ -74,8 +74,8 @@ export default function CreateEventPage() {
 
       await createEvent(data);
       router.push('/events');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create event');
+    } catch (err) {
+      setError((err as any).response?.data?.message || 'Failed to create event');
     } finally {
       setSubmitting(false);
     }

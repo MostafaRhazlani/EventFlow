@@ -90,8 +90,8 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
       await updateEvent(resolvedParams.id, data);
       router.push('/dashboard/organizer/events');
       router.refresh();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update event');
+    } catch (err) {
+      setError((err as any).response?.data?.message || 'Failed to update event');
     } finally {
       setSubmitting(false);
     }
