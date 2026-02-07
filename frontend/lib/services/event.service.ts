@@ -39,6 +39,11 @@ export async function getMyEvents(): Promise<Event[]> {
   return res.data;
 }
 
+export async function getMyBookings(): Promise<Event[]> {
+  const res = await api.get('/events/my-bookings');
+  return res.data;
+}
+
 export async function bookEvent(id: string): Promise<Event> {
   const res = await api.post(`/events/${id}/book`);
   return res.data;

@@ -77,6 +77,14 @@ export function Header() {
                 Dashboard
               </Link>
             )}
+            {user?.role === 'PARTICIPANT' && (
+              <Link
+                href="/dashboard/participant/bookings"
+                className="text-gray-600 hover:text-purple-600 font-medium transition-colors"
+              >
+                My Bookings
+              </Link>
+            )}
           </div>
 
           {/* Desktop Actions */}
@@ -153,6 +161,14 @@ export function Header() {
                 className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
               >
                 Dashboard
+              </Link>
+            )}
+            {user?.role === 'PARTICIPANT' && (
+              <Link
+                href="/dashboard/participant/bookings"
+                className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+              >
+                My Bookings
               </Link>
             )}
             {user ? (

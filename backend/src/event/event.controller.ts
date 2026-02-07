@@ -57,6 +57,13 @@ export class EventController {
     return this.eventService.findMyEvents(user.sub);
   }
 
+  @Get('my-bookings')
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRoles(Roles.PARTICIPANT)
+  findMyBookings(@CurrentUser() user: Payload) {
+    return this.eventService.findMyBookings(user.sub);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.eventService.findOne(id);

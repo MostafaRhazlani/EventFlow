@@ -9,8 +9,7 @@ export default async function EventsPage() {
   let events: Event[] = [];
   
   try {
-    const allEvents = await getEventsServer();
-    events = allEvents.filter(e => e.status === 'PUBLISHED' || e.status === 'DRAFT'); // Temporary: show drafts too so user can see their created events
+    events = await getEventsServer();
   } catch (error) {
     console.error('Failed to fetch events:', error);
   }

@@ -37,6 +37,14 @@ export class EventService {
       .exec();
   }
 
+  async findMyBookings(userId: string) {
+    return this.eventModel
+      .find({ 'participants.user': new Types.ObjectId(userId) })
+      .populate('organizer', 'first_name last_name email')
+      .populate('participants.user', 'first_name last_name email')
+      .exec();
+  }
+
   async findOne(id: string) {
     const event = await this.eventModel
       .findById(id)

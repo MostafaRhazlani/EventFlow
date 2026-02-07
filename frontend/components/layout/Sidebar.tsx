@@ -6,11 +6,11 @@ import Image from 'next/image';
 import {
   LayoutDashboard,
   Calendar,
-  Users,
   Ticket,
   LogOut,
   UserCheck,
   Clock,
+  Home,
 } from 'lucide-react';
 import { logout } from '@/lib/services';
 
@@ -23,18 +23,15 @@ const adminMenuItems = [
   { label: 'Dashboard', href: '/dashboard/admin', icon: LayoutDashboard },
   { label: 'Organizers', href: '/dashboard/admin/organizers', icon: UserCheck },
   { label: 'Events', href: '/dashboard/admin/events', icon: Calendar },
-  { label: 'Bookings', href: '/dashboard/admin/bookings', icon: Ticket },
 ];
 
 const organizerMenuItems = [
   { label: 'Dashboard', href: '/dashboard/organizer', icon: LayoutDashboard },
   { label: 'My Events', href: '/dashboard/organizer/events', icon: Calendar },
-  { label: 'Bookings', href: '/dashboard/organizer/bookings', icon: Ticket },
 ];
 
 const participantMenuItems = [
-  { label: 'Dashboard', href: '/dashboard/participant', icon: LayoutDashboard },
-  { label: 'My Reservations', href: '/dashboard/participant/reservations', icon: Ticket },
+  { label: 'My Bookings', href: '/dashboard/participant/bookings', icon: Ticket },
 ];
 
 export function Sidebar({ role, isApproved = false }: SidebarProps) {
@@ -140,7 +137,7 @@ export function Sidebar({ role, isApproved = false }: SidebarProps) {
           href="/"
           className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors w-full"
         >
-          <Users className="h-5 w-5" />
+          <Home className="h-5 w-5" />
           <span className="font-medium">Back to Home</span>
         </Link>
       </div>
