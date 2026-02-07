@@ -1,14 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { logoutAction } from '@/lib/actions/logout';
+import { logout } from '@/lib/services';
 import { Button } from './Button';
 
 export function LogoutButton() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await logoutAction();
+    await logout();
     router.push('/login');
   };
 

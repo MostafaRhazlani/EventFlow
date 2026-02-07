@@ -1,15 +1,20 @@
 import {
   Controller,
   Post,
+  Get,
   Res,
   Body,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { AuthGuard } from './guards/auth.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
 import * as express from 'express';
+import { Payload } from './dto/payload.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -53,5 +58,17 @@ export class AuthController {
     res.clearCookie('access_token');
     res.clearCookie('role');
     return { message: 'Logged out successfully!' };
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard)
+  getMe(@CurrentUser() user: Payload) {
+    return this.authService.getMe(user.sub);
+  }
+
+  @Post('become-organizer')
+  @UseGuards(AuthGuard)
+  becomeOrganizer(@CurrentUser() user: Payload) {
+    return this.authService.becomeOrganizer(user.sub);
   }
 }

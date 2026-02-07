@@ -16,4 +16,14 @@ export class UserService {
   async findByEmail(email: string): Promise<User | null> {
     return this.userModal.findOne({ email }).exec();
   }
+
+  async findOne(id: string): Promise<User | null> {
+    return this.userModal.findById(id).exec();
+  }
+
+  async update(id: string, updateData: Partial<User>): Promise<User | null> {
+    return this.userModal
+      .findByIdAndUpdate(id, updateData, { new: true })
+      .exec();
+  }
 }
