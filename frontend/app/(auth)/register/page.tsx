@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { register } from "@/lib/services";
+import { isAxiosError } from "axios";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -32,8 +33,14 @@ export default function RegisterPage() {
         password,
       });
       router.push("/login");
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "An error occurred");       
+    } catch (err) {
+      let message = "An error occurred";
+      if (isAxiosError(err) && err.response?.data?.message) {
+        message = err.response.data.message;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }

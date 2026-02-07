@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getCurrentUser, createEvent } from '@/lib/services';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { isAxiosError } from 'axios';
 
 export default function CreateEventPage() {
   const router = useRouter();
@@ -35,7 +36,7 @@ export default function CreateEventPage() {
           router.push('/become-organizer');
           return;
         }
-      } catch (err) {
+      } catch {
         router.push('/login');
       } finally {
         setLoading(false);
@@ -74,8 +75,11 @@ export default function CreateEventPage() {
 
       await createEvent(data);
       router.push('/events');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create event');
+    } catch (err) {
+      const errorMessage = isAxiosError(err) && err.response?.data?.message 
+        ? err.response.data.message 
+        : 'Failed to create event';
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }

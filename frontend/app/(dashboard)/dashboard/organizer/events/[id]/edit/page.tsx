@@ -6,6 +6,7 @@ import { getCurrentUser, getEvent, updateEvent } from '@/lib/services';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Image from 'next/image';
+import { isAxiosError } from 'axios';
 
 export default function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -90,8 +91,11 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
       await updateEvent(resolvedParams.id, data);
       router.push('/dashboard/organizer/events');
       router.refresh();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update event');
+    } catch (err) {
+      const errorMessage = isAxiosError(err) && err.response?.data?.message 
+        ? err.response.data.message 
+        : 'Failed to update event';
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }

@@ -12,7 +12,6 @@ interface CreateEventCTAProps {
 
 export default function CreateEventCTA({ className = '', variant = 'default' }: CreateEventCTAProps) {
   const [targetHref, setTargetHref] = useState('/become-organizer');
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -23,8 +22,6 @@ export default function CreateEventCTA({ className = '', variant = 'default' }: 
         }
       } catch {
         // Keep default href
-      } finally {
-        setLoading(false);
       }
     };
     checkAuth();
