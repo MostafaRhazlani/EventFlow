@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Check, X } from 'lucide-react';
 import { getEvent, getCurrentUser, updateBookingStatus } from '@/lib/services';
 import { Event, BookingStatus } from '@/types/event';
 
 export default function EventParticipantsPage({ params }: { params: Promise<{ id: string }> }) {
-  const router = useRouter();
+    // const router = useRouter();
   const resolvedParams = use(params);
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,8 +29,8 @@ export default function EventParticipantsPage({ params }: { params: Promise<{ id
             }
         }
         setEvent(eventData);
-      } catch (err) {
-        console.error(err);
+            } catch {
+                // error handled
       } finally {
         setLoading(false);
       }
@@ -38,30 +38,26 @@ export default function EventParticipantsPage({ params }: { params: Promise<{ id
     init();
   }, [resolvedParams.id]);
 
-  const handleStatusChange = async (userId: string, newStatus: BookingStatus) => {
-      if (!event) return;
-      setUpdatingId(userId);
-      try {
-        await updateBookingStatus(event._id, userId, newStatus);
-        // Optimistic update or refetch
-        setEvent(prev => {
-            if (!prev) return null;
-            return {
-                ...prev,
-                participants: prev.participants.map(p => {
-                    if (p.user._id === userId) {
-                        return { ...p, status: newStatus };
-                    }
-                    return p;
-                })
-            };
-        });
-      } catch (err) {
-          alert('Failed to update status');
-      } finally {
-          setUpdatingId(null);
-      }
-  };
+    const handleStatusChange = async (userId: string, newStatus: BookingStatus) => {
+        if (!event) return;
+        setUpdatingId(userId);
+        try {
+            await updateBookingStatus(event._id, userId, newStatus);
+            setEvent(prev => {
+                if (!prev) return null;
+                return {
+                    ...prev,
+                    participants: prev.participants.map(p =>
+                        p.user._id === userId ? { ...p, status: newStatus } : p
+                    ),
+                };
+            });
+        } catch {
+            alert('Failed to update status');
+        } finally {
+            setUpdatingId(null);
+        }
+    };
 
   if (loading) return <div className="p-8 text-center">Loading...</div>;
   if (!event) return <div className="p-8 text-center text-red-600">Event not found</div>;
