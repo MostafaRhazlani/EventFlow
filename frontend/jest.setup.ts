@@ -11,9 +11,8 @@ jest.mock('next/navigation', () => ({
 // Mock Next.js Image component (filter out Next.js-specific props)
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: ({ fill, priority, ...props }) => {
-    return createElement('img', props);
-  },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  default: (props: any) => createElement('img', props),
 }));
 
 // Setup global mocks

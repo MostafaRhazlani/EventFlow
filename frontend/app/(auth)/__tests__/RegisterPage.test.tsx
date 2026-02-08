@@ -2,6 +2,11 @@
  * @jest-environment jsdom
  */
 import React from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import RegisterPage from '@/app/(auth)/register/page';
+import { register } from '@/lib/services';
+import { useRouter } from 'next/navigation';
 
 jest.mock('@/lib/services', () => ({
   register: jest.fn(),
@@ -13,28 +18,32 @@ jest.mock('next/navigation', () => ({
 
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: function MockImage({ fill, priority, ...props }: any) { return React.createElement('img', props); },
+  default: function MockImage({ alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img alt={alt || 'test-img'} {...props} />;
+  },
 }));
-
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import RegisterPage from '@/app/(auth)/register/page';
-import { register } from '@/lib/services';
-import { useRouter } from 'next/navigation';
 
 const mockRegister = register as jest.MockedFunction<typeof register>;
 const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
 
 describe('RegisterPage', () => {
-  const mockRouter = { push: jest.fn(), back: jest.fn() };
+  const mockRouter = {
+    push: jest.fn(),
+    back: jest.fn(),
+    refresh: jest.fn(),
+    forward: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseRouter.mockReturnValue(mockRouter as any);
+    mockUseRouter.mockReturnValue(mockRouter as unknown as ReturnType<typeof useRouter>);
   });
 
   it('user can create account', async () => {
-    mockRegister.mockResolvedValue({ user: { _id: 'user-123' } });
+    mockRegister.mockResolvedValue(Object.assign({ user: { _id: 'user-123' } }));
 
     render(<RegisterPage />);
 

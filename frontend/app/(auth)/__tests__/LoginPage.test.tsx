@@ -2,6 +2,11 @@
  * @jest-environment jsdom
  */
 import React from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import LoginPage from '@/app/(auth)/login/page';
+import { login } from '@/lib/services';
+import { useRouter } from 'next/navigation';
 
 jest.mock('@/lib/services', () => ({
   login: jest.fn(),
@@ -13,34 +18,38 @@ jest.mock('next/navigation', () => ({
 
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: function MockImage({ fill, priority, ...props }: any) { return React.createElement('img', props); },
+  default: function MockImage({ alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img alt={alt || 'test-img'} {...props} />;
+  },
 }));
-
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import LoginPage from '@/app/(auth)/login/page';
-import { login } from '@/lib/services';
-import { useRouter } from 'next/navigation';
 
 const mockLogin = login as jest.MockedFunction<typeof login>;
 const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
 
 describe('LoginPage', () => {
-  const mockRouter = { push: jest.fn(), back: jest.fn(), refresh: jest.fn() };
+  const mockRouter = { 
+    push: jest.fn(), 
+    back: jest.fn(), 
+    refresh: jest.fn(),
+    forward: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseRouter.mockReturnValue(mockRouter as any);
+    mockUseRouter.mockReturnValue(mockRouter as unknown as ReturnType<typeof useRouter>);
   });
 
   it('participant can login', async () => {
-    mockLogin.mockResolvedValue({
+    mockLogin.mockResolvedValue(Object.assign({
       _id: 'user-123',
       first_name: 'John',
       last_name: 'Doe',
       email: 'participant@example.com',
       role: 'PARTICIPANT',
-    });
+    }));
 
     render(<LoginPage />);
 
@@ -56,13 +65,13 @@ describe('LoginPage', () => {
   });
 
   it('organizer can login', async () => {
-    mockLogin.mockResolvedValue({
+    mockLogin.mockResolvedValue(Object.assign({
       _id: 'org-123',
       first_name: 'Jane',
       last_name: 'Organizer',
       email: 'organizer@example.com',
       role: 'ORGANIZER',
-    });
+    }));
 
     render(<LoginPage />);
 

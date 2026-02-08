@@ -1,9 +1,22 @@
 /**
  * @jest-environment jsdom
  */
-import React from 'react';
+import React from "react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import {
+  getCurrentUser,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  updateEventStatus,
+} from "@/lib/services";
+import { useRouter } from "next/navigation";
+import CreateEventPage from "@/app/(dashboard)/dashboard/organizer/events/create/page";
+import { EventsTable } from "@/components/events/EventsTable";
+import { RecentDrafts } from "@/components/dashboard/RecentDrafts";
 
-jest.mock('@/lib/services', () => ({
+jest.mock("@/lib/services", () => ({
   getCurrentUser: jest.fn(),
   createEvent: jest.fn(),
   getMyEvents: jest.fn(),
@@ -12,168 +25,202 @@ jest.mock('@/lib/services', () => ({
   updateEventStatus: jest.fn(),
 }));
 
-jest.mock('next/navigation', () => ({
+jest.mock("next/navigation", () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock('next/image', () => ({
+jest.mock("next/image", () => ({
   __esModule: true,
-  default: function MockImage({ fill, priority, ...props }: any) { return React.createElement('img', props); },
+  default: function MockImage({
+    alt,
+    ...props
+  }: React.ImgHTMLAttributes<HTMLImageElement>) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img alt={alt || "test-img"} {...props} />;
+  },
 }));
 
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { getCurrentUser, createEvent, getMyEvents, updateEvent, deleteEvent, updateEventStatus } from '@/lib/services';
-import { useRouter } from 'next/navigation';
-
-const mockGetCurrentUser = getCurrentUser as jest.MockedFunction<typeof getCurrentUser>;
+const mockGetCurrentUser = getCurrentUser as jest.MockedFunction<
+  typeof getCurrentUser
+>;
 const mockCreateEvent = createEvent as jest.MockedFunction<typeof createEvent>;
-const mockGetMyEvents = getMyEvents as jest.MockedFunction<typeof getMyEvents>;
 const mockUpdateEvent = updateEvent as jest.MockedFunction<typeof updateEvent>;
 const mockDeleteEvent = deleteEvent as jest.MockedFunction<typeof deleteEvent>;
-const mockUpdateEventStatus = updateEventStatus as jest.MockedFunction<typeof updateEventStatus>;
+const mockUpdateEventStatus = updateEventStatus as jest.MockedFunction<
+  typeof updateEventStatus
+>;
 const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
 
-// Simple component imports for testing
-import CreateEventPage from '@/app/(dashboard)/dashboard/organizer/events/create/page';
-import { EventsTable } from '@/components/events/EventsTable';
-import { RecentDrafts } from '@/components/dashboard/RecentDrafts';
+describe("Event CRUD - Organizer", () => {
+  const mockRouter = {
+    push: jest.fn(),
+    refresh: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+  };
 
-describe('Event CRUD - Organizer', () => {
-  const mockRouter = { push: jest.fn(), refresh: jest.fn() };
-  
   const organizer = {
-    _id: 'org-123',
-    first_name: 'Jane',
-    last_name: 'Organizer',
-    email: 'organizer@example.com',
-    role: 'ORGANIZER',
+    _id: "org-123",
+    first_name: "Jane",
+    last_name: "Organizer",
+    email: "organizer@example.com",
+    role: "ORGANIZER",
     isApproved: true,
   };
 
   const mockEvents = [
     {
-      _id: 'event-1',
-      title: 'Tech Meetup',
-      description: 'A tech meetup',
-      date: '2026-03-15T10:00:00Z',
-      location: 'NYC',
-      status: 'PUBLISHED',
+      _id: "event-1",
+      title: "Tech Meetup",
+      description: "A tech meetup",
+      date: "2026-03-15T10:00:00Z",
+      location: "NYC",
+      status: "PUBLISHED" as const,
       maxParticipants: 50,
       participants: [],
-      organizer: { _id: 'org-123', first_name: 'Jane', last_name: 'Organizer', email: 'organizer@example.com' },
-      createdAt: '2026-02-01T10:00:00Z',
-      updatedAt: '2026-02-01T10:00:00Z',
+      organizer: {
+        _id: "org-123",
+        first_name: "Jane",
+        last_name: "Organizer",
+        email: "organizer@example.com",
+      },
+      createdAt: "2026-02-01T10:00:00Z",
+      updatedAt: "2026-02-01T10:00:00Z",
     },
   ];
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseRouter.mockReturnValue(mockRouter as any);
+    mockUseRouter.mockReturnValue(
+      mockRouter as unknown as ReturnType<typeof useRouter>,
+    );
     global.confirm = jest.fn(() => true);
     global.alert = jest.fn();
   });
 
-  it('organizer can create event', async () => {
-    mockGetCurrentUser.mockResolvedValue(organizer);
-    mockCreateEvent.mockResolvedValue(mockEvents[0]);
+  it("organizer can create event", async () => {
+    mockGetCurrentUser.mockResolvedValue(Object.assign({}, organizer));
+    mockCreateEvent.mockResolvedValue(Object.assign({}, mockEvents[0]));
 
     const { container } = render(<CreateEventPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Create New Event')).toBeInTheDocument();
+      expect(screen.getByText("Create New Event")).toBeInTheDocument();
     });
 
-    // Fill form using name attributes
-    const titleInput = container.querySelector('[name="title"]') as HTMLInputElement;
-    const descInput = container.querySelector('[name="description"]') as HTMLTextAreaElement;
-    const dateInput = container.querySelector('[name="date"]') as HTMLInputElement;
-    const locationInput = container.querySelector('[name="location"]') as HTMLInputElement;
-    const maxInput = container.querySelector('[name="maxParticipants"]') as HTMLInputElement;
+    const titleInput = container.querySelector(
+      '[name="title"]',
+    ) as HTMLInputElement;
+    const descInput = container.querySelector(
+      '[name="description"]',
+    ) as HTMLTextAreaElement;
+    const dateInput = container.querySelector(
+      '[name="date"]',
+    ) as HTMLInputElement;
+    const locationInput = container.querySelector(
+      '[name="location"]',
+    ) as HTMLInputElement;
+    const maxInput = container.querySelector(
+      '[name="maxParticipants"]',
+    ) as HTMLInputElement;
 
-    await userEvent.type(titleInput, 'Tech Meetup');
-    await userEvent.type(descInput, 'A tech meetup');
-    await userEvent.type(dateInput, '2026-03-15T10:00');
-    await userEvent.type(locationInput, 'NYC');
-    await userEvent.type(maxInput, '50');
+    await userEvent.type(titleInput, "Tech Meetup");
+    await userEvent.type(descInput, "A tech meetup");
+    await userEvent.type(dateInput, "2026-03-15T10:00");
+    await userEvent.type(locationInput, "NYC");
+    await userEvent.type(maxInput, "50");
 
-    await userEvent.click(screen.getByRole('button', { name: /create event/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /create event/i }),
+    );
 
     await waitFor(() => {
       expect(mockCreateEvent).toHaveBeenCalled();
-      expect(mockRouter.push).toHaveBeenCalledWith('/events');
+      expect(mockRouter.push).toHaveBeenCalledWith("/events");
     });
   });
 
-  it('organizer can view their events', () => {
-    render(<EventsTable events={mockEvents} />);
+  it("organizer can view their events", () => {
+    render(<EventsTable events={Object.assign([], mockEvents)} />);
 
-    expect(screen.getByText('Tech Meetup')).toBeInTheDocument();
-    expect(screen.getByText('NYC')).toBeInTheDocument();
+    expect(screen.getByText("Tech Meetup")).toBeInTheDocument();
+    expect(screen.getByText("NYC")).toBeInTheDocument();
   });
 
-  it('organizer can delete event', async () => {
-    mockDeleteEvent.mockResolvedValue();
+  it("organizer can delete event", async () => {
+    mockDeleteEvent.mockResolvedValue(undefined as unknown as void);
 
-    render(<EventsTable events={mockEvents} />);
+    render(<EventsTable events={Object.assign([], mockEvents)} />);
 
-    const deleteButton = screen.getByTitle('Delete');
+    const deleteButton = screen.getByTitle("Delete");
     await userEvent.click(deleteButton);
 
     await waitFor(() => {
       expect(global.confirm).toHaveBeenCalled();
-      expect(mockDeleteEvent).toHaveBeenCalledWith('event-1');
+      expect(mockDeleteEvent).toHaveBeenCalledWith("event-1");
     });
   });
 
-  it('organizer can update event info', async () => {
-    mockUpdateEvent.mockResolvedValue({ _id: 'event-1', title: 'Updated Event' });
+  it("organizer can update event info", async () => {
+    mockUpdateEvent.mockResolvedValue(Object.assign({
+      _id: "event-1",
+      title: "Updated Event",
+    }));
 
     const formData = new FormData();
-    formData.append('title', 'Updated Event');
-    formData.append('description', 'Updated description');
-    formData.append('date', '2026-03-15T10:00');
-    formData.append('location', 'New Location');
-    formData.append('maxParticipants', '100');
+    formData.append("title", "Updated Event");
+    formData.append("description", "Updated description");
+    formData.append("date", "2026-03-15T10:00");
+    formData.append("location", "New Location");
+    formData.append("maxParticipants", "100");
 
-    await mockUpdateEvent('event-1', formData);
+    await mockUpdateEvent("event-1", formData);
 
-    expect(mockUpdateEvent).toHaveBeenCalledWith('event-1', formData);
+    expect(mockUpdateEvent).toHaveBeenCalledWith("event-1", formData);
   });
 
-  it('organizer can publish draft event', async () => {
-    const draftEvents = [{
-      ...mockEvents[0],
-      status: 'DRAFT',
-    }];
-    mockUpdateEventStatus.mockResolvedValue();
+  it("organizer can publish draft event", async () => {
+    const draftEvents = [
+      {
+        ...mockEvents[0],
+        status: "DRAFT" as const,
+      },
+    ];
+    mockUpdateEventStatus.mockResolvedValue(undefined as unknown as void);
 
-    render(<RecentDrafts events={draftEvents} />);
+    render(<RecentDrafts events={Object.assign([], draftEvents)} />);
 
-    const publishButton = screen.getByTitle('Publish');
+    const publishButton = screen.getByTitle("Publish");
     await userEvent.click(publishButton);
 
     await waitFor(() => {
       expect(global.confirm).toHaveBeenCalled();
-      expect(mockUpdateEventStatus).toHaveBeenCalledWith('event-1', 'PUBLISHED');
+      expect(mockUpdateEventStatus).toHaveBeenCalledWith(
+        "event-1",
+        "PUBLISHED",
+      );
     });
   });
 
-  it('organizer can cancel event', async () => {
-    const draftEvents = [{
-      ...mockEvents[0],
-      status: 'DRAFT',
-    }];
-    mockUpdateEventStatus.mockResolvedValue();
+  it("organizer can cancel event", async () => {
+    const draftEvents = [
+      {
+        ...mockEvents[0],
+        status: "DRAFT" as const,
+      },
+    ];
+    mockUpdateEventStatus.mockResolvedValue(undefined as unknown as void);
 
-    render(<RecentDrafts events={draftEvents} />);
+    render(<RecentDrafts events={Object.assign([], draftEvents)} />);
 
-    const cancelButton = screen.getByTitle('Cancel');
+    const cancelButton = screen.getByTitle("Cancel");
     await userEvent.click(cancelButton);
 
     await waitFor(() => {
       expect(global.confirm).toHaveBeenCalled();
-      expect(mockUpdateEventStatus).toHaveBeenCalledWith('event-1', 'CANCELED');
+      expect(mockUpdateEventStatus).toHaveBeenCalledWith("event-1", "CANCELED");
     });
   });
 });
